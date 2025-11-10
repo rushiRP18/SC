@@ -94,3 +94,100 @@ public class A1_fuzzySet {
         sc.close();
     }
 }
+
+//=====><=======
+import java.util.*;
+import java.text.DecimalFormat;
+
+public class FuzzySetOperations {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter Set A in format MV/Element + MV/Element ... : ");
+        String inputA = sc.nextLine().trim();
+        System.out.print("Enter Set B in format MV/Element + MV/Element ... : ");
+        String inputB = sc.nextLine().trim();
+
+        Map<Integer, Double> setA = parseFuzzySet(inputA);
+        Map<Integer, Double> setB = parseFuzzySet(inputB);
+
+        Set<Integer> allElements = new TreeSet<>();
+        allElements.addAll(setA.keySet());
+        allElements.addAll(setB.keySet());
+
+        for (int element : allElements) {
+            setA.putIfAbsent(element, 0.0);
+            setB.putIfAbsent(element, 0.0);
+        }
+
+        Map<Integer, Double> union = new LinkedHashMap<>();
+        Map<Integer, Double> intersection = new LinkedHashMap<>();
+        Map<Integer, Double> compA = new LinkedHashMap<>();
+        Map<Integer, Double> compB = new LinkedHashMap<>();
+        Map<Integer, Double> diffAB = new LinkedHashMap<>();
+        Map<Integer, Double> diffBA = new LinkedHashMap<>();
+
+        for (int element : allElements) {
+            double a = setA.get(element);
+            double b = setB.get(element);
+            union.put(element, Math.max(a, b));
+            intersection.put(element, Math.min(a, b));
+            compA.put(element, 1.0 - a);
+            compB.put(element, 1.0 - b);
+            diffAB.put(element, Math.min(a, 1.0 - b));
+            diffBA.put(element, Math.min(b, 1.0 - a));
+        }
+
+        DecimalFormat df = new DecimalFormat("0.##");
+
+        System.out.println("\nFuzzy Union:");
+        System.out.println(formatSet(union, df));
+
+        System.out.println("\nFuzzy Intersection:");
+        System.out.println(formatSet(intersection, df));
+
+        System.out.println("\nFuzzy Complement of A:");
+        System.out.println(formatSet(compA, df));
+
+        System.out.println("\nFuzzy Complement of B:");
+        System.out.println(formatSet(compB, df));
+
+        System.out.println("\nFuzzy Difference A - B:");
+        System.out.println(formatSet(diffAB, df));
+
+        System.out.println("\nFuzzy Difference B - A:");
+        System.out.println(formatSet(diffBA, df));
+
+        sc.close();
+    }
+
+    private static Map<Integer, Double> parseFuzzySet(String input) {
+        Map<Integer, Double> set = new LinkedHashMap<>();
+        if (input == null || input.trim().isEmpty()) return set;
+        String[] pairs = input.split("\\+");
+        for (String pair : pairs) {
+            String p = pair.trim();
+            if (p.isEmpty()) continue;
+            String[] parts = p.split("/");
+            if (parts.length != 2) continue;
+            double membership = Double.parseDouble(parts[0].trim());
+            int element = Integer.parseInt(parts[1].trim());
+            set.put(element, membership);
+        }
+        return set;
+    }
+
+    private static String formatSet(Map<Integer, Double> map, DecimalFormat df) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        boolean first = true;
+        for (Map.Entry<Integer, Double> e : map.entrySet()) {
+            if (!first) sb.append(",");
+            sb.append("(").append(e.getKey()).append(",").append(df.format(e.getValue())).append(")");
+            first = false;
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+}
+
+
